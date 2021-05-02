@@ -9,49 +9,41 @@
 
 import pyupbit
 import pandas as pd
+import numpy as np
 import statistics
-ticker = "KRW-IOST"
+ticker = "KRW-WAXP"
 
 
 
 
-
-bitcoinMarketConditions = pyupbit.get_ohlcv(ticker = ticker , interval= "day",count = 21)
-
-pd.set_option('display.max_columns', None)
-bitcoinMarketConditionsChart = pd.DataFrame(bitcoinMarketConditions)
-
-bitcoinMarketConditionsChart = bitcoinMarketConditionsChart.apply(pd.to_numeric)
-
-print(bitcoinMarketConditionsChart)
-
-TRList = []
+def calculateN(ticker):
+    df = pyupbit.get_ohlcv(ticker = 'KRW-'+ticker)
 
 
 
-for i in range(0,20):
-    day1TR1 = abs(bitcoinMarketConditionsChart.iloc[20-i][1]-bitcoinMarketConditionsChart.iloc[20-i][2]) #오늘의 고가와 저가 차이(TR1)
-    day1TR2 = abs(bitcoinMarketConditionsChart.iloc[20-1-i][3]-bitcoinMarketConditionsChart.iloc[20-i][1]) #어제의 종가와 오늘의 고가 차이(TR2)
-    day1TR3 = abs(bitcoinMarketConditionsChart.iloc[20-1-i][3]-bitcoinMarketConditionsChart.iloc[20-i][2])#어제의 종가와 오늘의 저가 차이(TR3)
-    TR = max(day1TR1,day1TR2,day1TR3)
+    df.tail()
 
-    TRList.append(TR)
+    df['pclose'] = df['close'].shift(1)
+    df['diff1'] = abs(df['high'] - df['low'])
+    df['diff2'] = abs(df['pclose'] - df['high'])
+    df['diff3'] = abs(df['pclose'] - df['low'])
+    df['TR'] = df[['diff1', 'diff2', 'diff3']].max(axis=1)
+    # print(TRList)
 
-print(TRList)
+    # print(len(TRList))
 
+    import numpy as np
 
-print(len(TRList))
+    data = np.array(df['TR'])  # no previous day's N
+    # print(data)
+    for i in range(1, len(df)):
+        data[i] = (19 * data[i - 1] + df['TR'].iloc[i]) / 20
 
-sum = 0
-sum += TRList[0]*2
-for i in range(1,19):
-    sum += TRList[i]
-print(sum/20)
+    df['N'] = data
+    pd.set_option('display.max_columns', None)
+    # print(df)
 
-
-N = statistics.mean(TRList)
-print(N)
-print("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
+    return data[len(df)-1]
 #
 # print(day1TR1)
 #
@@ -96,29 +88,70 @@ def totalMoney():
 
     for i in range(1,len(df)):
         totalMoney += df.iloc[i][1]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])+df.iloc[i][2]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])
-######
+
 
     return totalMoney
 
 
-print(totalMoney())
-unit = 0.02*totalMoney()
-print(unit)
 
 
 
-while True:
+
+def loadAmountOfTheCoin(ticker):
 
 
-    buyBitcoinPrize = 0
+    access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
+    secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
+    upbit = pyupbit.Upbit(access_key, secrets_key)
 
-    if pyupbit.get_current_price(ticker) >= buyBitcoinPrize + N:
-        buyBitcoinPrize = pyupbit.get_current_price(ticker)
+    myBalance = upbit.get_balances()
+    df = pd.DataFrame(myBalance)
+
+
+    print(df.loc[df['currency'] == ticker , 'balance'].iloc[0])
+    amountOfTheCoin = df.loc[df['currency'] == ticker , 'balance'].iloc[0]
+    return amountOfTheCoin
+
+ticker = 'WAXP'
+loadAmountOfTheCoin(ticker)
+
+access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
+secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
+upbit = pyupbit.Upbit(access_key, secrets_key)
+
+myBalance = upbit.get_balances()
+df = pd.DataFrame(myBalance)
+
+df = df['currency']
+
+currencyList = df.values.tolist()
+currencyList.pop(0)
+print(currencyList)
+
+
+
+print("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
+for ticker in currencyList:
+    nowBitcoinPrize = 0
+    N = calculateN(ticker)
+    print(N)
+    totalMoney = totalMoney()
+
+    ticker = 'KRW-'+ticker
+
+    print(nowBitcoinPrize)
+
+    if pyupbit.get_current_price(ticker) >= nowBitcoinPrize + N:
+        nowBitcoinPrize = pyupbit.get_current_price(ticker)
         upbitBuy = pyupbit.Upbit(access_key, secrets_key)
-        upbitBuy.buy_market_order(ticker,totalMoney()*0.02)
+        upbitBuy.buy_market_order(ticker,totalMoney*0.02)
 
-    elif pyupbit.get_current_price(ticker) < buyBitcoinPrize - 2*N:
-        buyBitcoinPrize = pyupbit.get_current_price(ticker)
+    elif pyupbit.get_current_price(ticker) < nowBitcoinPrize - 2*N:
+        nowBitcoinPrize = pyupbit.get_current_price(ticker)
+        upbitSell =  pyupbit.Upbit(access_key, secrets_key)
+        upbitSell.sell_market_order(ticker,loadAmountOfTheCoin(ticker))
+
+
 
 
 
