@@ -95,8 +95,8 @@ def totalMoney():
     print(df)
 
     for i in range(1,len(df)):
-        totalMoney += df.iloc[i][1]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])
-
+        totalMoney += df.iloc[i][1]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])+df.iloc[i][2]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])
+######
 
     return totalMoney
 
@@ -107,18 +107,18 @@ print(unit)
 
 
 
-# while True:
-#
-#
-#     buyBitcoinPrize = 0
-#
-#     if pyupbit.get_current_price(ticker) >= buyBitcoinPrize + N:
-#         buyBitcoinPrize = pyupbit.get_current_price(ticker)
-#         upbitBuy = pyupbit.Upbit(access_key, secrets_key)
-#         upbitBuy.buy_market_order(ticker,totalMoney()*0.02)
-#
-#     elif pyupbit.get_current_price(ticker) < buyBitcoinPrize - 2*N:
-#         buyBitcoinPrize = pyupbit.get_current_price(ticker)
+while True:
+
+
+    buyBitcoinPrize = 0
+
+    if pyupbit.get_current_price(ticker) >= buyBitcoinPrize + N:
+        buyBitcoinPrize = pyupbit.get_current_price(ticker)
+        upbitBuy = pyupbit.Upbit(access_key, secrets_key)
+        upbitBuy.buy_market_order(ticker,totalMoney()*0.02)
+
+    elif pyupbit.get_current_price(ticker) < buyBitcoinPrize - 2*N:
+        buyBitcoinPrize = pyupbit.get_current_price(ticker)
 
 
 
