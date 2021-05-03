@@ -197,9 +197,6 @@ coinData = []#['코인이름','맨처음데이터 즉 avg_buy_price 매수 평�
 
 
 
-in_sec = input("시간을 입력하세요.(초):")
-sec = int(in_sec)
-print(sec)
 
 
 
