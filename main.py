@@ -11,13 +11,14 @@ import pyupbit
 import pandas as pd
 import numpy as np
 import statistics
+import time
+import threading
+
 ticker = "KRW-WAXP"
 
 
-
-
 def calculateN(ticker):
-    df = pyupbit.get_ohlcv(ticker = 'KRW-'+ticker)
+    df = pyupbit.get_ohlcv(ticker = ticker)
 
 
 
@@ -84,7 +85,7 @@ def totalMoney():
 
     totalMoney = df.iloc[0][1]+df.iloc[0][2]
 
-    print(df)
+    # print(df)
 
     for i in range(1,len(df)):
         totalMoney += df.iloc[i][1]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])+df.iloc[i][2]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])
@@ -112,46 +113,154 @@ def loadAmountOfTheCoin(ticker):
     amountOfTheCoin = df.loc[df['currency'] == ticker , 'balance'].iloc[0]
     return amountOfTheCoin
 
-ticker = 'WAXP'
-loadAmountOfTheCoin(ticker)
+def loadMyBalanceAsDataFrame():
+    access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
+    secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
+    upbit = pyupbit.Upbit(access_key, secrets_key)
 
-access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
-secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
-upbit = pyupbit.Upbit(access_key, secrets_key)
-
-myBalance = upbit.get_balances()
-df = pd.DataFrame(myBalance)
-
-df = df['currency']
-
-currencyList = df.values.tolist()
-currencyList.pop(0)
-print(currencyList)
+    myBalance = upbit.get_balances()
+    df = pd.DataFrame(myBalance)
+    pd.set_option('display.max_columns', None)
+    print(df)
+    return df
 
 
 
-print("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
-for ticker in currencyList:
-    nowBitcoinPrize = 0
-    N = calculateN(ticker)
-    print(N)
-    totalMoney = totalMoney()
 
-    ticker = 'KRW-'+ticker
-
-    print(nowBitcoinPrize)
-
-    if pyupbit.get_current_price(ticker) >= nowBitcoinPrize + N:
-        nowBitcoinPrize = pyupbit.get_current_price(ticker)
-        upbitBuy = pyupbit.Upbit(access_key, secrets_key)
-        upbitBuy.buy_market_order(ticker,totalMoney*0.02)
-
-    elif pyupbit.get_current_price(ticker) < nowBitcoinPrize - 2*N:
-        nowBitcoinPrize = pyupbit.get_current_price(ticker)
-        upbitSell =  pyupbit.Upbit(access_key, secrets_key)
-        upbitSell.sell_market_order(ticker,loadAmountOfTheCoin(ticker))
+def updateAndCutCoinData(lengthOfBalnceDataFrame):
+    df = loadMyBalanceAsDataFrame()
+    for i in range(0,lengthOfBalnceDataFrame+1): #0,1
+        if i == len(coinData)-1: #1
+            coinData.pop(i)
+            break;
 
 
+###
+
+def updateAndAddCoinData(lengthOfBalnceDataFrame):
+    df = loadMyBalanceAsDataFrame()
+    print(lengthOfBalnceDataFrame)
+    for i in range(0,lengthOfBalnceDataFrame): # 0,1,2,3
+        if i == lengthOfBalnceDataFrame-1 :# 4-1 = 3
+            coinData.append(['코인이름',1,2,3,4,5,6,7])
+            coinData[i-1][0] = df.iloc[i][0]
+            coinData[i-1][1] = float(df.iloc[i][3])
+            coinData[i-1][2] = float(df.iloc[i][3])
+
+
+
+coinData = []#['코인이름','맨처음데이터 즉 avg_buy_price 매수 평균','데이터1','데이터2','데이터3','데이터4','데이터5'],
+
+
+balanceDf = loadMyBalanceAsDataFrame()
+
+in_sec = input("시간을 입력하세요.(초):")
+sec = int(in_sec)
+print(sec)
+
+
+
+#while은 반복문으로 sec가 0이 되면 반복을 멈춰라
+while (sec != 0 ):
+    for i in range(1,6):
+        if len(balanceDf) == len(coinData):
+            updateAndCutCoinData(len(balanceDf))
+        elif len(balanceDf) == len(coinData)+2: # 2 = 0+ 2
+            updateAndAddCoinData(len(balanceDf))
+
+
+
+
+
+
+        for j in range(0, len(coinData)):
+            ticker = 'KRW-' + coinData[j][0]
+            coinData[j][i + 2] = pyupbit.get_current_price(ticker)
+
+            N = calculateN(ticker)
+
+            if coinData[j][i] >= coinData[j][2] + N :
+                coinData[j][2] = coinData[j][i]
+                if coinData[j][i] <= coinData[j][1] + 6*N:
+                    upbitBuy = pyupbit.Upbit(access_key, secrets_key)
+                    upbitBuy.buy_market_order(ticker, totalMoney()* 0.02)
+
+
+            elif coinData[j][i] < coinData[j][2] - 2*N:
+                # coinData[j][2] = coinData[j][i]
+                upbitSell = pyupbit.Upbit(access_key, secrets_key)
+                upbitSell.sell_market_order(ticker, loadAmountOfTheCoin(ticker))
+
+
+        sec -= 1
+        time.sleep(1)
+        print(coinData)
+        if sec == 0 :
+            break
+
+
+
+
+
+a = pd.DataFrame(coinData)
+print(a)
+
+
+# def ToDo():
+#     print("Timer")
+#     timer = threading.Timer(10, ToDo)
+#     timer.start()
+#
+#
+# if __name__ == '__main__':
+#     startTimer()
+
+
+#
+#
+#
+# print(len(coinData))
+#
+
+#
+
+#
+# print(coinData)
+# a = pd.DataFrame(coinData)
+# print(a)
+
+# ticker = 'WAXP'
+# loadAmountOfTheCoin(ticker)
+#
+# access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
+# secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
+# upbit = pyupbit.Upbit(access_key, secrets_key)
+#
+# myBalance = upbit.get_balances()
+# df = pd.DataFrame(myBalance)
+#
+# df = df['currency']
+#
+# currencyList = df.values.tolist()
+# currencyList.pop(0)
+# print(currencyList)
+#
+#
+#
+# print("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ")
+# for ticker in currencyList:
+#     nowBitcoinPrize = 0
+#
+#     print(N)
+#     totalMoney = totalMoney()
+#
+#     ticker = 'KRW-'+ticker
+#
+#     print(nowBitcoinPrize)
+#
+
+#
+#
 
 
 
