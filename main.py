@@ -14,7 +14,7 @@ import statistics
 import time
 import threading
 
-ticker = "KRW-WAXP"
+
 
 
 def calculateN(ticker):
@@ -109,7 +109,7 @@ def loadAmountOfTheCoin(ticker):
     df = pd.DataFrame(myBalance)
 
 
-    print(df.loc[df['currency'] == ticker , 'balance'].iloc[0])
+    # print(df.loc[df['currency'] == ticker , 'balance'].iloc[0])
     amountOfTheCoin = df.loc[df['currency'] == ticker , 'balance'].iloc[0]
     return amountOfTheCoin
 
@@ -121,38 +121,81 @@ def loadMyBalanceAsDataFrame():
     myBalance = upbit.get_balances()
     df = pd.DataFrame(myBalance)
     pd.set_option('display.max_columns', None)
-    print(df)
+    # print(df)
     return df
 
 
 
 
-def updateAndCutCoinData(lengthOfBalnceDataFrame):
-    df = loadMyBalanceAsDataFrame()
-    for i in range(0,lengthOfBalnceDataFrame+1): #0,1
-        if i == len(coinData)-1: #1
-            coinData.pop(i)
-            break;
+def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
+
+    dfDelegate =df['currency'].tolist()
+    dfDelegate.pop(0)
+    print(dfDelegate)
+    num = 0
+    outName = ''
+
+    coinDataName = []
+    for i in coinData:
+        coinDataName.append(i[0])
+
+
+    for i in coinDataName:
+        if i not in dfDelegate :
+            print("coinData not containing :")
+            print(i)
+            outName = i
+
+    for i in coinData[:][0]:
+        if i == outName:
+            coinData.pop(num)
+        num += 1
+
+#0,1
+# if i == len(coinData)-1: #1
+#     coinData.pop(i)
+
 
 
 ###
 
-def updateAndAddCoinData(lengthOfBalnceDataFrame):
-    df = loadMyBalanceAsDataFrame()
-    print(lengthOfBalnceDataFrame)
-    for i in range(0,lengthOfBalnceDataFrame): # 0,1,2,3
-        if i == lengthOfBalnceDataFrame-1 :# 4-1 = 3
+def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
+
+    # print(lengthOfBalnceDataFrame)
+    dfDelegate = df['currency'].tolist()
+    dfDelegate.pop(0)
+    print(dfDelegate)
+    num = 0
+    outName = ''
+
+    coinDataName = []
+    for i in coinData:
+        coinDataName.append(i[0])
+
+    for i in dfDelegate:
+        if i not in coinDataName:
+            print("coinData not containing :")
+            print(i)
+            outName = i
+
+    sample = df[df['currency'] == outName]
+    print(sample)
+    print(sample.iloc[0][3])
+
+
+    for i in range(0,lengthOfBalnceDataFrame): # 0,1,2
+        if i == lengthOfBalnceDataFrame-1 :# 3-1 = 2
             coinData.append(['코인이름',1,2,3,4,5,6,7])
-            coinData[i-1][0] = df.iloc[i][0]
-            coinData[i-1][1] = float(df.iloc[i][3])
-            coinData[i-1][2] = float(df.iloc[i][3])
+            coinData[i-1][0] = outName
+            coinData[i-1][1] = float(sample.iloc[0][3])
+            coinData[i-1][2] = float(sample.iloc[0][3])
 
-
+    print(coinData)
 
 coinData = []#['코인이름','맨처음데이터 즉 avg_buy_price 매수 평균','데이터1','데이터2','데이터3','데이터4','데이터5'],
 
 
-balanceDf = loadMyBalanceAsDataFrame()
+
 
 in_sec = input("시간을 입력하세요.(초):")
 sec = int(in_sec)
@@ -161,12 +204,14 @@ print(sec)
 
 
 #while은 반복문으로 sec가 0이 되면 반복을 멈춰라
-while (sec != 0 ):
+while True:
+    balanceDf = loadMyBalanceAsDataFrame()
+    print(balanceDf)
     for i in range(1,6):
         if len(balanceDf) == len(coinData):
-            updateAndCutCoinData(len(balanceDf))
+            updateAndCutCoinData(len(balanceDf),balanceDf)
         elif len(balanceDf) == len(coinData)+2: # 2 = 0+ 2
-            updateAndAddCoinData(len(balanceDf))
+            updateAndAddCoinData(len(balanceDf),balanceDf)
 
 
 
@@ -191,12 +236,12 @@ while (sec != 0 ):
                 upbitSell = pyupbit.Upbit(access_key, secrets_key)
                 upbitSell.sell_market_order(ticker, loadAmountOfTheCoin(ticker))
 
-
-        sec -= 1
-        time.sleep(1)
         print(coinData)
-        if sec == 0 :
-            break
+
+
+        time.sleep(1)
+
+
 
 
 
