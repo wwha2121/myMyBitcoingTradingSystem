@@ -195,7 +195,7 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
 
 
 coinData = []
-
+####ddd
 
 #while은 반복문으로 sec가 0이 되면 반복을 멈춰라
 while True:
