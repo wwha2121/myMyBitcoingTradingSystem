@@ -14,7 +14,7 @@ import statistics
 import time
 import threading
 import datetime
-
+import json
 
 
 def calculateN(ticker):
@@ -42,8 +42,6 @@ def calculateN(ticker):
 
     df['N'] = data
     pd.set_option('display.max_columns', None)
-    # print(df)
-
     return data[len(df)-1]
 #
 # print(day1TR1)
@@ -138,6 +136,7 @@ def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
     coinDataName = []
     for i in coinData:
         coinDataName.append(i[0])
+        print(i[0])
 
 
     for i in coinDataName:
@@ -145,10 +144,13 @@ def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
             print("coinData not containing :")
             print(i)
             outName = i
+            print(type(outName))
 
-    for i in coinData[:][0]:
-        if i == outName:
+    for i in coinData:
+        print(i)
+        if i[0] == outName:
             coinData.pop(num)
+            print("뻈다 임마")
         num += 1
 
 #0,1
@@ -181,6 +183,7 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
     sample = df[df['currency'] == outName]
     print(sample)
     print(sample.iloc[0][3])
+    print("더했다 임마")
 
 
     for i in range(0,lengthOfBalnceDataFrame): # 0,1,2
@@ -191,13 +194,33 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
             coinData[i-1][2] = float(sample.iloc[0][3])
 
 
-
-
+path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
 
 coinData = []
-####ddd
 
-#while은 반복문으로 sec가 0이 되면 반복을 멈춰라
+try:
+
+    with open(path) as json_file:
+        data = json.load(json_file)
+        print(data)
+    coinData = data
+
+    existedBalanceDf = loadMyBalanceAsDataFrame()
+
+    print(existedBalanceDf)
+
+    #
+    # for i in range(1,len(existedBalanceDf)):
+    #     coinData.append([existedBalanceDf.iloc[i][0],existedBalanceDf.iloc[i][3],pyupbit.get_current_price('KRW-' + existedBalanceDf.iloc[i][0]),4,5,6,7,8])
+    #     print(pyupbit.get_orderbook('KRW-' + existedBalanceDf.iloc[i][0]))
+
+
+    print(coinData)
+
+
+except:
+    print("에러")
+
 while True:
     balanceDf = loadMyBalanceAsDataFrame()
 
@@ -214,26 +237,26 @@ while True:
 
 
 
-        for j in range(0, len(coinData)):
-            ticker = 'KRW-' + coinData[j][0]
+        for j in range(0, len(coinData)): #코인 첫번쨰부터 끝까지
+            ticker = 'KRW-' + coinData[j][0] #코인 이름
             coinData[j][i + 2] = pyupbit.get_current_price(ticker)
 
             N = calculateN(ticker)
 
-            if coinData[j][i] >= coinData[j][2] + N :
-                coinData[j][2] = coinData[j][i]
-                if coinData[j][i] <= coinData[j][1] + 6*N:
-                    upbitBuy = pyupbit.Upbit(access_key, secrets_key)
-                    upbitBuy.buy_market_order(ticker, totalMoney()* 0.02)
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+
+            if coinData[j][i+2] >= coinData[j][2] + float(1/2)*N and coinData[j][i+2] <= coinData[j][1] + 5*N:
+                coinData[j][2] = coinData[j][i+2]
+                upbitBuy = pyupbit.Upbit(access_key, secrets_key)
+                upbitBuy.buy_market_order(ticker, totalMoney() * 0.02)
+                print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
 
 
-            elif coinData[j][i] < coinData[j][2] - 2*N:
+            elif coinData[j][i+2] < coinData[j][2] - 2*N:
                 # coinData[j][2] = coinData[j][i]
                 upbitSell = pyupbit.Upbit(access_key, secrets_key)
                 upbitSell.sell_market_order(ticker, loadAmountOfTheCoin(ticker))
@@ -248,8 +271,11 @@ while True:
         print(datetime.datetime.now())
         print(coinData)
 
+        with open(path, 'w') as outfile:
+            json.dump(coinData, outfile)
 
-        time.sleep(1)
+
+        time.sleep(0.5)
 
 
 
