@@ -197,90 +197,90 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
 path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
 
 coinData = []
+while True:
+    try:
 
-try:
+        with open(path) as json_file:
+            data = json.load(json_file)
+            print(data)
+        coinData = data
 
-    with open(path) as json_file:
-        data = json.load(json_file)
-        print(data)
-    coinData = data
+        existedBalanceDf = loadMyBalanceAsDataFrame()
 
-    existedBalanceDf = loadMyBalanceAsDataFrame()
+        print(existedBalanceDf)
 
-    print(existedBalanceDf)
-
-    #
-    # for i in range(1,len(existedBalanceDf)):
-    #     coinData.append([existedBalanceDf.iloc[i][0],existedBalanceDf.iloc[i][3],pyupbit.get_current_price('KRW-' + existedBalanceDf.iloc[i][0]),4,5,6,7,8])
-    #     print(pyupbit.get_orderbook('KRW-' + existedBalanceDf.iloc[i][0]))
-
-
-    print(coinData)
+        #
+        # for i in range(1,len(existedBalanceDf)):
+        #     coinData.append([existedBalanceDf.iloc[i][0],existedBalanceDf.iloc[i][3],pyupbit.get_current_price('KRW-' + existedBalanceDf.iloc[i][0]),4,5,6,7,8])
+        #     print(pyupbit.get_orderbook('KRW-' + existedBalanceDf.iloc[i][0]))
 
 
-
-    while True:
-        balanceDf = loadMyBalanceAsDataFrame()
-
-        print(balanceDf)
-
-        for i in range(1,6):
-            if len(balanceDf) == len(coinData):
-                updateAndCutCoinData(len(balanceDf),balanceDf)
-            elif len(balanceDf) == len(coinData)+2: # 2 = 0+ 2
-                updateAndAddCoinData(len(balanceDf),balanceDf)
+        print(coinData)
 
 
+
+        while True:
+            balanceDf = loadMyBalanceAsDataFrame()
+
+            print(balanceDf)
+
+            for i in range(1,6):
+                if len(balanceDf) == len(coinData):
+                    updateAndCutCoinData(len(balanceDf),balanceDf)
+                elif len(balanceDf) == len(coinData)+2: # 2 = 0+ 2
+                    updateAndAddCoinData(len(balanceDf),balanceDf)
 
 
 
 
-            for j in range(0, len(coinData)): #코인 첫번쨰부터 끝까지
-                ticker = 'KRW-' + coinData[j][0] #코인 이름
-                coinData[j][i + 2] = pyupbit.get_current_price(ticker)
-
-                N = calculateN(ticker)
 
 
+                for j in range(0, len(coinData)): #코인 첫번쨰부터 끝까지
+                    ticker = 'KRW-' + coinData[j][0] #코인 이름
+                    coinData[j][i + 2] = pyupbit.get_current_price(ticker)
 
-                if coinData[j][i+2] >= coinData[j][2] + 0.5*N and coinData[j][i+2] <= coinData[j][1] +  2.5*N:
-                    coinData[j][2] = coinData[j][i+2]
-                    upbitBuy = pyupbit.Upbit(access_key, secrets_key)
-                    upbitBuy.buy_market_order(ticker, totalMoney() * 0.02)
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-
-
-                elif coinData[j][i+2] <=  coinData[j][2] - 2*N:
-                    # coinData[j][2] = coinData[j][i]
-                    upbitSell = pyupbit.Upbit(access_key, secrets_key)
-                    upbitSell.sell_market_order(ticker, loadAmountOfTheCoin(ticker))
-                    print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                    print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-
-            print(datetime.datetime.now())
-            print(coinData)
-
-            with open(path, 'w') as outfile:
-                json.dump(coinData, outfile)
-
-
-            time.sleep(0.5)
+                    N = calculateN(ticker)
 
 
 
+                    if coinData[j][i+2] >= coinData[j][2] + 0.5*N and coinData[j][i+2] <= coinData[j][1] +  2.5*N:
+                        coinData[j][2] = coinData[j][i+2]
+                        upbitBuy = pyupbit.Upbit(access_key, secrets_key)
+                        upbitBuy.buy_market_order(ticker, totalMoney() * 0.02)
+                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
 
-except:
-    print("에러")
+
+                    elif coinData[j][i+2] <=  coinData[j][2] - 2*N:
+                        # coinData[j][2] = coinData[j][i]
+                        upbitSell = pyupbit.Upbit(access_key, secrets_key)
+                        upbitSell.sell_market_order(ticker, loadAmountOfTheCoin(ticker))
+                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+
+                print(datetime.datetime.now())
+                print(coinData)
+
+                with open(path, 'w') as outfile:
+                    json.dump(coinData, outfile)
+
+
+                time.sleep(0.5)
+
+
+
+
+    except:
+        print("에러")
 
 
 
