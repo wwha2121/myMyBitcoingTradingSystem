@@ -133,7 +133,7 @@ def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
     dfDelegate.pop(0)
     print(dfDelegate)
     num = 0
-    outName = ''
+    outName = []
 
     coinDataName = []
     for i in coinData:
@@ -145,14 +145,16 @@ def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
         if i not in dfDelegate :
             print("coinData not containing :")
             print(i)
-            outName = i
+            outName.append(i)
             print(type(outName))
 
     for i in coinData:
         print(i)
-        if i[0] == outName:
-            coinData.pop(num)
-            print("뻈다 임마")
+        for j in range(0,len(coinData)):
+            if i[0] == outName[j]:
+                coinData.pop(num)
+                outName.remove(outName[j])
+                print("뻈다 임마")
         num += 1
 
 #0,1
@@ -170,7 +172,7 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
     dfDelegate.pop(0)
     #print(dfDelegate)
     num = 0
-    outName = ''
+    outName = []
 
     coinDataName = []
     for i in coinData:
@@ -180,20 +182,24 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
         if i not in coinDataName:
             print("coinData not containing :")
             print(i)
-            outName = i
+            outName.append(i)
+    sample = []
 
-    sample = df[df['currency'] == outName]
+    for i in range(0,len(sample)):
+        sample.append(df[df['currency'] == outName])
+
     print(sample)
     print(sample.iloc[0][3])
     print("더했다 임마")
 
 
-    for i in range(0,lengthOfBalnceDataFrame): # 0,1,2
-        if i == lengthOfBalnceDataFrame-1 :# 3-1 = 2
-            coinData.append(['코인이름',1,2,3,4,5,6,7])
-            coinData[i-1][0] = outName
-            coinData[i-1][1] = float(sample.iloc[0][3])
-            coinData[i-1][2] = float(sample.iloc[0][3])
+    for j in range(0,len(sample)):
+        for i in range(0,lengthOfBalnceDataFrame): # 0,1,2
+            if i == lengthOfBalnceDataFrame-1 :# 3-1 = 2
+                coinData.append(['코인이름',1,2,3,4,5,6,7])
+                coinData[i-1][0] = outName[j]
+                coinData[i-1][1] = float(sample[j].iloc[0][3])
+                coinData[i-1][2] = float(sample[j].iloc[0][3])
 
 
 
