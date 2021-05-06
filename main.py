@@ -85,7 +85,9 @@ def totalMoney():
 
     # print(df)
 
+
     for i in range(1,len(df)):
+        time.sleep(0.1)
         totalMoney += df.iloc[i][1]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])+df.iloc[i][2]*pyupbit.get_current_price("KRW-"+df.iloc[i][0])
 
 
@@ -194,20 +196,42 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
             coinData[i-1][2] = float(sample.iloc[0][3])
 
 
+
+
+def listTrueOrNO(): # 코인이름(A~Z)로 나열하여 빠진거 혹시 없는지 확인
+
+    dfDelegate = loadMyBalanceAsDataFrame()
+    print(dfDelegate)
+    df = dfDelegate.sort_values(by='currency',axis=0,ascending=True)
+    print(df)
+
+
+
+listTrueOrNO()
+
 path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
 
-coinData = []
+
+
 while True:
     try:
-
-        with open(path) as json_file:
-            data = json.load(json_file)
+        try:
+            path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
+            with open(path) as json_file:
+                data = json.load(json_file)
             print(data)
-        coinData = data
+            coinData = data
+            print(coinData)
+            print("지금 가지고 있는 코인의 갯수:")
+            print(len(coinData))
+            existedBalanceDf = loadMyBalanceAsDataFrame()
 
-        existedBalanceDf = loadMyBalanceAsDataFrame()
+        except Exception as e:
+            print("데이터가 없습니다!")
+            print(e)
+            time.sleep(0.5)
 
-        print(existedBalanceDf)
+
 
         #
         # for i in range(1,len(existedBalanceDf)):
@@ -215,7 +239,6 @@ while True:
         #     print(pyupbit.get_orderbook('KRW-' + existedBalanceDf.iloc[i][0]))
 
 
-        print(coinData)
 
 
 
@@ -243,16 +266,19 @@ while True:
 
 
 
-                    if coinData[j][i+2] >= coinData[j][2] + 0.5*N and coinData[j][i+2] <= coinData[j][1] +  2.5*N:
-                        coinData[j][2] = coinData[j][i+2]
-                        upbitBuy = pyupbit.Upbit(access_key, secrets_key)
-                        upbitBuy.buy_market_order(ticker, totalMoney() * 0.02)
-                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                    if coinData[j][i+2] >= coinData[j][2] + 0.5*N:
+                        coinData[j][2] = coinData[j][i + 2]
+
+                        if coinData[j][i + 2] <= coinData[j][1] + 1.6 * N:
+
+                            upbitBuy = pyupbit.Upbit(access_key, secrets_key)
+                            upbitBuy.buy_market_order(ticker, totalMoney() * 0.02)
+                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
 
 
                     elif coinData[j][i+2] <=  coinData[j][2] - 2*N:
@@ -270,24 +296,23 @@ while True:
                 print(datetime.datetime.now())
                 print(coinData)
 
+                path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
                 with open(path, 'w') as outfile:
                     json.dump(coinData, outfile)
 
 
                 time.sleep(0.5)
 
+    except Exception as e:
+        print(e)
+        print("에러났어")
+        time.sleep(0.5)
 
 
 
-    except:
-        print("에러")
 
 
 
-
-
-a = pd.DataFrame(coinData)
-print(a)
 
 
 # def ToDo():
