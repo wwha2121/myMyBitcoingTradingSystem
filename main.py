@@ -15,11 +15,14 @@ import time
 import threading
 import datetime
 import json
-
+import re
+import requests
+import numpy
+import talib
+from slacker import Slacker
 
 def calculateN(ticker):
-    df = pyupbit.get_ohlcv(ticker = ticker)
-
+    df = pyupbit.get_ohlcv(ticker = ticker,interval="day")
 
 
     df.tail()
@@ -106,12 +109,31 @@ def loadAmountOfTheCoin(ticker):
     upbit = pyupbit.Upbit(access_key, secrets_key)
 
     myBalance = upbit.get_balances()
+    time.sleep(0.1)
     df = pd.DataFrame(myBalance)
+    # print(df)
+    # print(ticker)
+    ticker = str(ticker)
+    ticker = re.sub("KRW-","", ticker)
+    # print(ticker)
+    time.sleep(0.1)
+    print(ticker)
+    # a = df.loc[df['currency'] == ticker , 'balance'].iloc[0]
+    #
+    amountOfTheCoin = df.loc[df['currency'] == ticker , 'balance']
+    print("ASDSADASDASDASDASDAFFFS")
+    print("ASDSADASDASDASDASDAFFFS")
+    print("ASDSADASDASDASDASDAFFFS")
+    print("ASDSADASDASDASDASDAFFFS")
+    print("ASDSADASDASDASDASDAFFFS")
+    print("ASDSADASDASDASDASDAFFFS")
+    print("ASDSADASDASDASDASDAFFFS")
+    print("ASDSADASDASDASDASDAFFFS")
+    a = list(amountOfTheCoin)
 
+    print(a[0])
 
-    # print(df.loc[df['currency'] == ticker , 'balance'].iloc[0])
-    amountOfTheCoin = df.loc[df['currency'] == ticker , 'balance'].iloc[0]
-    return amountOfTheCoin
+    return float(a[0])
 
 def loadMyBalanceAsDataFrame():
     access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
@@ -128,8 +150,7 @@ def loadMyBalanceAsDataFrame():
 
 
 def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
-
-    dfDelegate =df['currency'].tolist()
+    dfDelegate = df['currency'].tolist()
     dfDelegate.pop(0)
     print(dfDelegate)
     num = 0
@@ -140,23 +161,35 @@ def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
         coinDataName.append(i[0])
         print(i[0])
 
-
     for i in coinDataName:
-        if i not in dfDelegate :
-            print("coinData not containing :")
+        if i not in dfDelegate:
+            print("뺴기함수에서 왔습니다 coinData not containing :")
             print(i)
             outName.append(i)
             print(type(outName))
 
+    print(outName)
+    print(coinData)
+    print("zzzz")
+    print(len(outName))
+    print("zzzz")
     for i in coinData:
+        print("aaaaaaa")
         print(i)
-        for j in range(0,len(coinData)):
+        print("aaaaaaaa")
+        for j in range(0, len(outName)):
+            print(j)
+
             if i[0] == outName[j]:
-                coinData.pop(num)
-                outName.remove(outName[j])
-                print("뻈다 임마")
+                i[0] ="삭제"
         num += 1
 
+    for i in coinData[:]:
+        if i[0] == "삭제":
+            coinData.remove(i)
+    print("kkkkk")
+    print(coinData)
+    print("kkkkk")
 #0,1
 # if i == len(coinData)-1: #1
 #     coinData.pop(i)
@@ -165,14 +198,15 @@ def updateAndCutCoinData(lengthOfBalnceDataFrame,df):
 
 ###
 
-def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
 
+
+def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
     # print(lengthOfBalnceDataFrame)
     dfDelegate = df['currency'].tolist()
     dfDelegate.pop(0)
-    #print(dfDelegate)
+    # print(dfDelegate)
     num = 0
-    outName = []
+    SameName = []
 
     coinDataName = []
     for i in coinData:
@@ -182,24 +216,26 @@ def updateAndAddCoinData(lengthOfBalnceDataFrame,df):
         if i not in coinDataName:
             print("coinData not containing :")
             print(i)
-            outName.append(i)
-    sample = []
+            SameName.append(str(i))
+    print(SameName)
 
-    for i in range(0,len(sample)):
-        sample.append(df[df['currency'] == outName])
-
-    print(sample)
-    print(sample.iloc[0][3])
-    print("더했다 임마")
+    coinInfoAbp = []
 
 
-    for j in range(0,len(sample)):
-        for i in range(0,lengthOfBalnceDataFrame): # 0,1,2
-            if i == lengthOfBalnceDataFrame-1 :# 3-1 = 2
-                coinData.append(['코인이름',1,2,3,4,5,6,7])
-                coinData[i-1][0] = outName[j]
-                coinData[i-1][1] = float(sample[j].iloc[0][3])
-                coinData[i-1][2] = float(sample[j].iloc[0][3])
+    for i in range(0,len(SameName)):
+        isin_filter = df['currency'].isin([SameName[i]])
+        df_isin = float(df[isin_filter].iloc[:,3])
+        print(df_isin)
+        coinInfoAbp.append(df_isin)
+        print("빠")
+
+    print(coinInfoAbp)
+    # for i in range(0,len(SameName)):
+    #     df['avg_buy_price'] = np.select(condition)
+    #     print(df)
+
+    for j in range(0, len(SameName)):
+            coinData.append([SameName[j],  coinInfoAbp[j],  coinInfoAbp[j], 3.0, 4.0, 5.0, 6.0, 7.0])
 
 
 
@@ -212,11 +248,158 @@ def listTrueOrNO(): # 코인이름(A~Z)로 나열하여 빠진거 혹시 없는�
     print(df)
 
 
+def post_message(token, channel, text):
+    response = requests.post("https://slack.com/api/chat.postMessage",
+                             headers={"Authorization": "Bearer " + token},
+                             data={"channel": channel, "text": text}
+                             )
+    print(response)
+
+
+
+def coinData에있는지(coin):
+
+    for coinOfcoinData in coinData:
+        if 'KRW-'+coinOfcoinData[0] == coin:
+            return True
+
+    return False
+
+def MACD(coin):
+    import requests
+    import pandas as pd
+    import time
+    import webbrowser
+
+    a = 1
+
+
+    url = "https://api.upbit.com/v1/candles/days"
+
+
+    querystring = {"market": coin, "count": "100"}
+
+    response = requests.request("GET", url, params=querystring)
+    time.sleep(0.1)
+    data = response.json()
+
+    df = pd.DataFrame(data)
+
+
+    df = df.iloc[::-1]
+
+    df = df['trade_price']
+
+
+    exp1 = df.ewm(span=12, adjust=False).mean()
+    exp2 = df.ewm(span=26, adjust=False).mean()
+    macd = exp1 - exp2
+    exp3 = macd.ewm(span=9, adjust=False).mean()
+
+    print(coin)
+
+    print('1번쨰 수 :',  macd[0]-exp3[0] ,end= ' ')
+    print('2번쨰수 MACD: ', macd[0],end = ' ')
+    print('3번쨰수 Signal: ', exp3[0],end = ' ')
+
+
+    test1 =  macd[0] -exp3[0]
+    test2 =  macd[1]- exp3[1]
+
+    call = '매매 필요없음'
+
+    # print("4번쨰수 :",test2)
+
+    #
+    if test1 < 0 and test2 > 0:
+        call = '매도'
+        return False
+        # print(coin + '매매의견: ', call)
+
+
+    if test1 > 0 and test2 < 0 :
+        call = '매수'
+        # print(coin + '매매의견: ', call)
+
+        return True
+
+    # print(coin + '매매의견: ', call)
+
+    time.sleep(0.1)
+
+
+
+def AD(coin):
+
+    df = pyupbit.get_ohlcv(ticker= coin,count = 200,interval="day")
+    pd.set_option('display.max_row', 200)
+
+    real = talib.AD(df.high, df.low, df.close, df.volume)
+    df['ad'] = real
+
+    temp = []
+    temp.append(df['ad'].iloc[-1])
+    temp.append(df['ad'].iloc[-2])
+
+    if max(temp) == temp[0]:
+        print("AD반응 ok")
+        return True
+
+
+
+def twentyDaysExpect넘었다():
+    return True
+
+def 이동평균선대순환():
+    return True
+
+def RsI지수(coin):
+    df = pyupbit.get_ohlcv(ticker=coin, count=200, interval="day")
+
+    real = talib.RSI(df.close, timeperiod=14)
+    # print(":asdasdasdasdasdasdasdasdqweqwe")
+    # print(real)
+    print(coin)
+    print(real[-1])
+    if real[-1] > 50:
+
+        print("리얼반응 Ok")
+        return True
+
+
+
+def 진입():
+
+
+
+    for coin in coinList:
+        start_time = timeit.default_timer()  # 시작 시간 체크
+
+
+        if not coinData에있는지(coin) and MACD(coin):
+            access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
+            secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
+            upbitBuy = pyupbit.Upbit(access_key, secrets_key)
+            upbitBuy.buy_market_order(coin, totalMoney() * 0.04)
+
+
+
+            myToken = "xoxb-2027211587383-2035455281590-KFkVTgLoYPYO2w8rord2mwtr"
+
+            post_message(myToken, "#coin",coin+ "비트코인 처음!!!!!구매!! ")
+
+        terminate_time = timeit.default_timer()  # 종료 시간 체크
+
+        print("진입 함수 %f초 걸렸습니다." % (terminate_time - start_time))
+
 
 listTrueOrNO()
 
+
 path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
 
+coinList = pyupbit.get_tickers(fiat="KRW")
+coinData = []
 
 
 while True:
@@ -230,7 +413,7 @@ while True:
             print(coinData)
             print("지금 가지고 있는 코인의 갯수:")
             print(len(coinData))
-            existedBalanceDf = loadMyBalanceAsDataFrame()
+
 
         except Exception as e:
             print("데이터가 없습니다!")
@@ -249,78 +432,104 @@ while True:
 
 
         while True:
-            balanceDf = loadMyBalanceAsDataFrame()
-
-            print(balanceDf)
-
-            for i in range(1,6):
-                if len(balanceDf) == len(coinData):
-                    updateAndCutCoinData(len(balanceDf),balanceDf)
-                elif len(balanceDf) == len(coinData)+2: # 2 = 0+ 2
-                    updateAndAddCoinData(len(balanceDf),balanceDf)
 
 
 
 
-
-
-                for j in range(0, len(coinData)): #코인 첫번쨰부터 끝까지
-                    ticker = 'KRW-' + coinData[j][0] #코인 이름
-                    coinData[j][i + 2] = pyupbit.get_current_price(ticker)
-
-                    N = calculateN(ticker)
+            import timeit
 
 
 
-                    if coinData[j][i+2] >= coinData[j][2] + 0.5*N:
-                        coinData[j][2] = coinData[j][i + 2]
+            for num in range(0,2):
+                balanceDf = loadMyBalanceAsDataFrame()
 
-                        if coinData[j][i + 2] <= coinData[j][1] + 1.6 * N:
+                print(balanceDf)
+                print("코인의 개수는")
+                print(len(coinData))
 
-                            upbitBuy = pyupbit.Upbit(access_key, secrets_key)
-                            upbitBuy.buy_market_order(ticker, totalMoney() * 0.02)
-                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                            print("ㅡㅡㅡㅡㅡㅡ매수주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                if len(balanceDf) <= len(coinData):
+                    updateAndCutCoinData(len(balanceDf), balanceDf)
+                elif len(balanceDf) >= len(coinData) + 2:  # 2 = 0+ 2
+                    updateAndAddCoinData(len(balanceDf), balanceDf)
+
+                for i in range(1, 6):
+
+                    if len(balanceDf) <= len(coinData):
+                        updateAndCutCoinData(len(balanceDf), balanceDf)
+                    elif len(balanceDf) >= len(coinData) + 2:  # 2 = 0+ 2
+                        updateAndAddCoinData(len(balanceDf), balanceDf)
+
+                    for j in range(0, len(coinData)):  # 코인 첫번쨰부터 끝까지
+
+                        print(coinData)
+                        ticker = 'KRW-' + coinData[j][0]  # 코인 이름
+                        coinData[j][i + 2] = pyupbit.get_current_price(ticker)
+                        print(ticker)
+                        N = calculateN(ticker)
+
+                        if coinData[j][i + 2] >= coinData[j][2] +N:
+                            coinData[j][2] = coinData[j][i + 2]
+
+                            if coinData[j][i + 2] < coinData[j][1] + 4.2*N:
+                                access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
+                                secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
+                                upbitBuy = pyupbit.Upbit(access_key, secrets_key)
+                                upbitBuy.buy_market_order(ticker, totalMoney() * 0.04)
+                                myToken = "xoxb-2027211587383-2035455281590-KFkVTgLoYPYO2w8rord2mwtr"
+                                time.sleep(0.1)
+                                post_message(myToken, "#coin", ticker + "비트코인 추가 !!!!구매!! ")
 
 
-                    elif coinData[j][i+2] <=  coinData[j][2] - 2*N:
-                        # coinData[j][2] = coinData[j][i]
-                        upbitSell = pyupbit.Upbit(access_key, secrets_key)
-                        upbitSell.sell_market_order(ticker, loadAmountOfTheCoin(ticker))
-                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
-                        print("ㅡㅡㅡㅡㅡㅡ매도주문 체결ㅡㅡㅡㅡㅡㅡㅡㅡ")
+                        elif  coinData[j][i+2] <=  coinData[j][2] - 2*N :
+                            # coinData[j][2] = coinData[j][i]
 
-                print(datetime.datetime.now())
-                print(coinData)
+                            access_key = "x44YC9AQxeISmQngxCTS7VnMemHRhoomVOfR7XOw"
+                            secrets_key = "3uXAMditiZXguREKxNnEnhk7EWI0ubUbVB5c9xxl"
+                            upbitSell = pyupbit.Upbit(access_key, secrets_key)
+                            time.sleep(0.2)
+                            print(ticker)
+                            upbitSell.sell_market_order(ticker, loadAmountOfTheCoin(ticker))
+                            time.sleep(0.2)
+                            if len(balanceDf) <= len(coinData):
+                                updateAndCutCoinData(len(balanceDf), balanceDf)
+                            elif len(balanceDf) >= len(coinData) + 2:  # 2 = 0+ 2
+                                updateAndAddCoinData(len(balanceDf), balanceDf)
+                            time.sleep(0.2)
+                            myToken = "xoxb-2027211587383-2035455281590-KFkVTgLoYPYO2w8rord2mwtr"
 
-                path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
-                with open(path, 'w') as outfile:
-                    json.dump(coinData, outfile)
+                            post_message(myToken, "#coin", ticker + "비트코인 판매!! ")
 
+                    print(datetime.datetime.now())
+                    print(coinData)
 
-                time.sleep(0.5)
+                    if len(balanceDf) <= len(coinData):
+                        updateAndCutCoinData(len(balanceDf), balanceDf)
+                    elif len(balanceDf) >= len(coinData) + 2:  # 2 = 0+ 2
+                        updateAndAddCoinData(len(balanceDf), balanceDf)
+
+                    path = "/Users/jeonseongju/PycharmProjects/myMyBitcoingTradingSystem/coinData.json"
+                    with open(path, 'w') as outfile:
+                        json.dump(coinData, outfile)
+
+                    time.sleep(0.5)
+
+            진입()
+
+        myToken = "xoxb-2027211587383-2035455281590-KFkVTgLoYPYO2w8rord2mwtr"
+
+        post_message(myToken, "#coin", "비트코인 자동매매 프로그램 오류남 ")
+
+        time.sleep(6)
+
 
     except Exception as e:
+
         print(e)
-        print("에러났어")
+        myToken = "xoxb-2027211587383-2035455281590-KFkVTgLoYPYO2w8rord2mwtr"
+        time.sleep(0.1)
+        post_message(myToken, "#coin", "에러남")
+
         time.sleep(0.5)
-
-
-
-
-
-
-
-
 # def ToDo():
 #     print("Timer")
 #     timer = threading.Timer(10, ToDo)
@@ -337,7 +546,6 @@ while True:
 # print(len(coinData))
 #
 
-#
 
 #
 # print(coinData)
